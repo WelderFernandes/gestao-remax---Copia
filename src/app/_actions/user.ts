@@ -7,7 +7,7 @@ import { UserType } from '../(DashboardLayout)/types/apps/users'
 
 export async function getUsers() {
   const data = await api
-    .get('https://api.remax.rdweb.com.br/accounts/usuarios/', {
+    .get('/accounts/usuarios/', {
       headers: {
         Authorization: `Bearer ${cookies().get('token')?.value}`,
       },
@@ -31,26 +31,18 @@ export async function getUsers() {
   return response
 }
 export async function getUserById(id: string) {
+  console.log('🚀 ~ response ~ response:', id)
   const data = await api
     .get(`https://api.remax.rdweb.com.br/accounts/usuarios/${id}/`, {
       headers: {
-        Authorization: `Bearer ${cookies().get('token')?.value}`,
+        Authorization: `Bearer ${cookies().get('access_token')?.value}`,
       },
     })
     .then((res) => res.data)
-
-  // Orderna os dados para o header da tabela
-  // const response = {
-  //   id: data.user.id,
-  //   name: data.user.first_name + ' ' + data.user.last_name,
-  //   email: data.user.email,
-  //   phone: data.user.telefone,
-  //   status: data.user.is_active,
-  //   staff: data.user.is_staff,
-  //   category: data.user.categoria,
-  // }
-
-  console.log('🚀 ~ response ~ response:', data)
+    .catch((err) => {
+      console.log({ err })
+    })
+  console.log('🚀 ~ getUserById ~ data:', data)
 
   return data
 }

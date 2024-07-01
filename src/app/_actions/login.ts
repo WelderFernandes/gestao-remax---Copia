@@ -1,32 +1,96 @@
-'use server'
+import { HTTPError } from 'ky'
+import { api } from './..//../http/api-client'
 
-import { api } from '@/services/api'
-import { cookies } from 'next/headers'
-
-export interface SignInProps {
+interface SignInWithPasswordProps {
   email: string
   password: string
 }
 
-export async function signIn(values: SignInProps) {
-  return await api
-    .post('auth/register/login/', values, {
-      headers: {
-        Authorization: '',
-      },
-    })
-    .then((res) => {
-      console.log({ res })
-      if (res.status === 200 && res.data.access_token) {
-        cookies().set('token', res.data.access_token)
-        console.log(res)
-        return res.data
-      } else {
-        return res
+interface SignInWithPasswordResponse {
+  message: string
+  access_token: string
+  refresh_token: string
+}
+
+interface CheckResponse {
+  message: string
+  user: string
+  user_id: string
+  type: string
+}
+
+export interface IUser {
+  id?: string
+  nivel?: string[]
+  last_login?: string
+  first_name?: string
+  last_name?: string
+  email?: string
+  telefone?: string
+  foto?: string
+  is_active?: boolean
+  is_staff?: boolean
+  categoria?: string
+  access_token?: string
+}
+
+export async function SignInWithPassword({
+  email,
+  password,
+}: SignInWithPasswordProps) {
+  try {
+    const result = await api
+      .post('auth/register/login/', {
+        json: {
+          email,
+          password,
+        },
+        hooks: {
+          beforeError: [
+            (error) => {
+              const { response } = error
+              if (response.status === 401) {
+                error.name = 'UNAUTHORIZED'
+                error.message = 'Incorrect email or password'
+              }
+              return error
+            },
+          ],
+        },
+      })
+      .json<SignInWithPasswordResponse>()
+
+    const check = await api
+      .post('auth/register/check/', {
+        json: {
+          token: result.access_token,
+        },
+      })
+      .json<CheckResponse>()
+
+    const user = await api
+      .get(`accounts/usuarios/${check.user_id}`, {
+        headers: {
+          Authorization: `Bearer ${result.access_token}`,
+        },
+      })
+      .json<IUser>()
+
+    return { user, result }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: HTTPError | any) {
+    if (error instanceof HTTPError) {
+      console.log('🚀 ~ error: 555', error)
+      console.log(error.response.status, error.response.body)
+      if (error.response.status === 401) {
+        return {
+          status: error.response.status,
+          error: error.response.body?.getReader(),
+        }
       }
-    })
-    .catch((err) => {
-      console.log(err.response.data)
-      return err.response.data
-    })
+    }
+    console.log('🚀 ~ SignInWithPassword ~ error:', error.response.status)
+
+    return { error: error.response.body }
+  }
 }

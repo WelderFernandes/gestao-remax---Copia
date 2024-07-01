@@ -4,9 +4,9 @@ import { AppState } from '@/store/store'
 import Box from '@mui/material/Box'
 import Container from '@mui/material/Container'
 import { styled, useTheme } from '@mui/material/styles'
-import { getCookie } from 'cookies-next'
-import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import React, { useEffect } from 'react'
+import AuthProvider from '../_providers/auth'
 import HorizontalHeader from './layout/horizontal/header/Header'
 import Navigation from './layout/horizontal/navbar/Navigation'
 import Customizer from './layout/shared/customizer/Customizer'
@@ -43,15 +43,17 @@ export default function RootLayout({
   const customizer = useSelector((state: AppState) => state.customizer)
   const theme = useTheme()
 
-  const token = getCookie('token')
-  const router = useRouter()
-
+  const { data: session } = useSession({ required: true })
   useEffect(() => {
-    if (!token) {
-      router.push('/auth/auth1/login')
+    async function verifySession(data: unknown) {
+      if (!data) {
+        console.log('🚀 ~ session: layout', data)
+      }
     }
-  }, [token, router])
+    verifySession(session)
+  }, [session])
 
+  // if (session) {
   return (
     <MainWrapper>
       {/* ------------------------------------------- */}
@@ -88,7 +90,7 @@ export default function RootLayout({
 
           <Box sx={{ minHeight: 'calc(100vh - 170px)' }}>
             {/* <Outlet /> */}
-            {children}
+            <AuthProvider>{children}</AuthProvider>
             {/* <Index /> */}
           </Box>
 
@@ -100,4 +102,5 @@ export default function RootLayout({
       </PageWrapper>
     </MainWrapper>
   )
+  // } else return <>{redirect('/api/auth/signin')}</>
 }

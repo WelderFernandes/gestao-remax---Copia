@@ -11,17 +11,23 @@ import * as dropdownData from './data';
 
 import { Stack } from '@mui/material';
 import { IconMail } from '@tabler/icons-react';
+import { signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
 
 
 const Profile = () => {
   const [anchorEl2, setAnchorEl2] = useState(null);
+const {data: session} = useSession()
+console.log("🚀 ~ Profile ~ session:", session)
+
   const handleClick2 = (event: any) => {
     setAnchorEl2(event.currentTarget);
   };
   const handleClose2 = () => {
     setAnchorEl2(null);
   };
+
+
 
   return (
     <Box>
@@ -70,7 +76,7 @@ const Profile = () => {
         <Avatar src={"/images/profile/user-1.jpg"} alt={"ProfileImg"} sx={{ width: 95, height: 95 }} />
           <Box>
             <Typography variant="subtitle2" color="textPrimary" fontWeight={600}>
-              Mathew Anderson
+              {session?.user?.name ?? 'admin'}
             </Typography>
             <Typography variant="subtitle2" color="textSecondary">
               Designer
@@ -83,7 +89,7 @@ const Profile = () => {
               gap={1}
             >
               <IconMail width={15} height={15} />
-              info@modernize.com
+              {session?.user?.email}
             </Typography>
           </Box>
         </Stack>
@@ -155,7 +161,7 @@ const Profile = () => {
               <Image src={"/images/backgrounds/unlimited-bg.png"} width={150} height={183} alt="unlimited" className="signup-bg" />
             </Box>
           </Box>
-          <Button href="/auth/auth1/login" variant="outlined" color="primary" component={Link} fullWidth>
+          <Button onClick={() => signOut()} variant="outlined" color="primary" fullWidth>
             Logout
           </Button>
         </Box>

@@ -486,7 +486,7 @@ export default function CustomTable({
                               }}
                             >
                               <Typography variant="body1" fontWeight="400">
-                                {row.name}
+                                {row.first_name + ' ' + row.last_name}
                               </Typography>
                               <Typography
                                 color="textSecondary"
@@ -506,7 +506,7 @@ export default function CustomTable({
                             <Box
                               sx={{
                                 backgroundColor:
-                                  row.status === true
+                                  row.is_active === true
                                     ? (theme) => theme.palette.success.main
                                     : (theme) => theme.palette.error.main,
                                 borderRadius: '100%',
@@ -522,7 +522,7 @@ export default function CustomTable({
                                 ml: 1,
                               }}
                             >
-                              {row.status === true ? 'Ativo' : 'Inativo'}
+                              {row.is_active === true ? 'Ativo' : 'Inativo'}
                             </Typography>
                           </Box>
                         </TableCell>

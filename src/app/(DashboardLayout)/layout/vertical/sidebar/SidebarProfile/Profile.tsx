@@ -7,11 +7,12 @@ import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { IconPower } from '@tabler/icons-react'
-import Link from 'next/link'
+import { signOut, useSession } from 'next-auth/react'
 
 export const Profile = () => {
   const customizer = useSelector((state: AppState) => state.customizer)
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up('lg'))
+  const {data: session, status} = useSession()
   const hideMenu = lgUp
     ? customizer.isCollapse && !customizer.isSidebarHover
     : ''
@@ -27,20 +28,19 @@ export const Profile = () => {
         <>
           <Avatar
             alt="Remy Sharp"
-            src={'/images/profile/user-1.jpg'}
+            src={session?.user?.image || '/images/profile/user-1.jpg'}
             sx={{ height: 40, width: 40 }}
           />
 
           <Box>
-            <Typography variant="h6">Mathew</Typography>
+            <Typography variant="h6">{session?.user?.name}</Typography>
             <Typography variant="caption">Designer</Typography>
           </Box>
           <Box sx={{ ml: 'auto' }}>
             <Tooltip title="Logout" placement="top">
               <IconButton
                 color="primary"
-                component={Link}
-                href="/auth/auth1/login"
+                onClick={() => signOut()}
                 aria-label="logout"
                 size="small"
               >

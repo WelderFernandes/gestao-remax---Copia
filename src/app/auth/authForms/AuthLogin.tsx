@@ -1,6 +1,6 @@
 'use client'
 import { loginType } from '@/app/(DashboardLayout)/types/auth/auth'
-import { SignInProps, signIn } from '@/app/_actions/login'
+// import { SignInProps } from '@/app/_actions/login'
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox'
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel'
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField'
@@ -13,6 +13,7 @@ import FormGroup from '@mui/material/FormGroup'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { useFormik } from 'formik'
+import { signIn, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -20,27 +21,12 @@ import * as yup from 'yup'
 import AuthSocialButtons from './AuthSocialButtons'
 
 export default function AuthLogin({ title, subtitle, subtext }: loginType) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string>('')
   const router = useRouter()
-  async function HandleSignIn(values: SignInProps) {
-    try {
-      setIsSubmitting(true)
-      const response = await signIn(values)
-      console.log('🚀 ~ HandleSignIn ~ response:', response)
-      if (response?.access_token) {
-        router.push('/')
-      } else {
-        console.log('🚀 ~ HandleSignIn ~ error:', errorMessage)
-        setErrorMessage('Credenciais inválidas')
-      }
-    } catch (error) {
-      console.log({ error })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-  // const router = useRouter()
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const { data: session } = useSession()
+
   const validationSchema = yup.object({
     email: yup
       .string()
@@ -54,10 +40,29 @@ export default function AuthLogin({ title, subtitle, subtext }: loginType) {
       password: '',
     },
     validationSchema,
-    onSubmit: (values: SignInProps) => {
-      HandleSignIn(values)
+    onSubmit: async (values) => {
+      setIsLoading(true)
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      })
+
+      if (result?.error && result.status === 401) {
+        // Handle successful sign-in
+        setErrorMessage('Invalid email or password')
+        setIsLoading(false)
+        return null
+      }
+      router.push('/')
+      // authenticate(values)
+      // HandleSignIn(values)
     },
   })
+
+  if (session?.user) {
+    router.push('/')
+  }
   return (
     <>
       {title ? (
@@ -65,9 +70,7 @@ export default function AuthLogin({ title, subtitle, subtext }: loginType) {
           {title}
         </Typography>
       ) : null}
-
       {subtext}
-
       <AuthSocialButtons title="Sign in with" />
       <Box mt={3}>
         <Divider>
@@ -83,7 +86,6 @@ export default function AuthLogin({ title, subtitle, subtext }: loginType) {
           </Typography>
         </Divider>
       </Box>
-
       <form onSubmit={formik.handleSubmit}>
         <Stack>
           <Box>
@@ -144,10 +146,10 @@ export default function AuthLogin({ title, subtitle, subtext }: loginType) {
             size="large"
             fullWidth
             type="submit"
-            disabled={isSubmitting}
+            disabled={isLoading}
           >
             Entrar
-            {isSubmitting && (
+            {isLoading && (
               <CircularProgress color="secondary" size={20} sx={{ ml: 1 }} />
             )}
           </Button>

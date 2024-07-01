@@ -1,6 +1,7 @@
 import { Providers } from '@/store/providers'
 import React from 'react'
 import { Toaster } from 'sonner'
+import AuthProvider from './_providers/auth'
 import MyApp from './app'
 
 export const metadata = {
@@ -17,8 +18,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
-          <Toaster />
-          <MyApp>{children}</MyApp>
+          <AuthProvider>
+            <Toaster />
+            <MyApp>{children}</MyApp>
+          </AuthProvider>
         </Providers>
       </body>
     </html>
